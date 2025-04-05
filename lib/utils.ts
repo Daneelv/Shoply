@@ -12,7 +12,7 @@ export function convertToPlainObj<T>(value: T): T {
 
 //Format Numbner with decimal places
 export function formatNumberWithDecimal(num: number): string {
-  const [int, dec] = num.toString.split(".");
+  const [int, dec] = num.toString().split(".");
 
-  return decimal ? `${int}.${dec.padEnd(2, "0")}` : `${int}.00`;
+  return dec ? `${int}.${dec.padEnd(2, "0")}` : `${int}.00`;
 }

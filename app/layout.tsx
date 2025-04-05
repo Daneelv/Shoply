@@ -9,7 +9,7 @@ const inter = Inter({ subsets: ["latin"] });
 export const metadata: Metadata = {
   title: `${APP_NAME}`,
   description: `${APP_DESCRIPTION}`,
-  metadataBaseURL: new URL("/", SERVER_URL).toString(),
+  metadataBase: new URL("/", SERVER_URL),
 };
 
 export default function RootLayout({

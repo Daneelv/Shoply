@@ -3,11 +3,8 @@ import { formatNumberWithDecimal } from "./utils";
 
 const currency = z.string().refine((val) => {
   const regex = /^\d+(\.\d{2})?$/;
-  return regex.test(
-    formatNumberWithDecimal(val),
-    "Price Must have exactly 2 Decimal Places"
-  );
-});
+  return regex.test(formatNumberWithDecimal(Number(val)));
+}, "Price Must have exactly 2 Decimal Places");
 
 //Schema for inserting Products
 export const insertProductSchema = z.object({
@@ -18,7 +15,7 @@ export const insertProductSchema = z.object({
   description: z.string().min(3, "Description must be atleast 3 characters"),
   stock: z.coerce.number(),
   images: z.array(z.string()).min(1, "Product must have atleast one image"),
-  isfeatured: z.boolean(),
+  isFeatured: z.boolean(),
   banner: z.string().nullable(),
   price: currency,
 });
