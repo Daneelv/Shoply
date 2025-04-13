@@ -1,7 +1,6 @@
-import NextAuth, { NextAuthConfig } from "next-auth";
+import NextAuth from "next-auth";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import { prisma } from "@/db/prisma";
-import { adapter } from "next/dist/server/web/adapter";
 import CredentialProvider from "next-auth/providers/credentials";
 import { compareSync } from "bcrypt-ts-edge";
 import type { NextAuthConfig } from "next-auth";
@@ -32,7 +31,7 @@ export const config = {
         // Decrtypt DB password and compare with entered password
         const isPasswordValid = compareSync(
           credentials.password as string,
-          user.password
+          user.password || ""
         );
 
         //If password is valid, return user object
@@ -55,12 +54,32 @@ export const config = {
     async session({ session, user, trigger, token }: any) {
       // set user id from the token
       session.user.id = token.sub;
+      session.user.role = token.role;
+      session.user.name = token.name;
 
       // if there is a update then set user name
       if (trigger === "update") {
         session.user.name = user.name;
       }
       return session;
+    },
+    async jwt({ token, user }: any) {
+      // Assign user fields to token
+      if (user) {
+        token.role = user.role;
+
+        // If user has no name then user the first part of the email
+        if (user === "NO_NAME") {
+          token.name = user.email!.split("@")[0];
+
+          // Update database to reflect the token name
+          await prisma.user.update({
+            where: { id: user.id },
+            data: { name: token.name },
+          });
+        }
+      }
+      return token;
     },
   },
 } satisfies NextAuthConfig;
