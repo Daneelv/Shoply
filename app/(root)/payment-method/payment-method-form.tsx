@@ -7,9 +7,12 @@ import { paymentMethodSchema } from "@/lib/validators";
 import { useForm } from "react-hook-form";
 import z from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Loader } from "lucide-react";
+import { PAYMENT_METHODS } from "@/lib/constants";
+import { updateUserPaymentMethod } from "@/lib/actions/user.actions";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { useEffect, useState } from "react";
 import {
   Form,
   FormField,
@@ -35,8 +38,26 @@ const PaymentMethodForm = ({
     },
   });
 
-  const onSubmit = () => {
-    return;
+  const [hasMounted, setHasMounted] = useState(false);
+
+  useEffect(() => {
+    setHasMounted(true);
+  }, []);
+
+  if (!hasMounted) return null;
+
+  const onSubmit = async (values: z.infer<typeof paymentMethodSchema>) => {
+    startTransition(async () => {
+      const res = await updateUserPaymentMethod(values);
+      if (!res.success) {
+        toast({
+          description: res.message,
+          variant: "destructive",
+        });
+        return;
+      }
+      router.push("/place-order");
+    });
   };
 
   return (
@@ -52,7 +73,40 @@ const PaymentMethodForm = ({
             onSubmit={form.handleSubmit(onSubmit)}
             className="space-y-4"
           >
-            <div className="flex md:flex-row flex-col gap-5"></div>
+            <div className="flex md:flex-row flex-col gap-5">
+              <FormField
+                control={form.control}
+                name="type"
+                render={({ field }) => (
+                  <FormItem className="space-y-3">
+                    <FormControl>
+                      <RadioGroup
+                        onValueChange={field.onChange}
+                        className="flex flex-col space-y-2"
+                      >
+                        {PAYMENT_METHODS.map((paymentMethod) => (
+                          <FormItem
+                            key={paymentMethod}
+                            className="flex items-center space-x-3 space-y-0"
+                          >
+                            <FormControl>
+                              <RadioGroupItem
+                                value={paymentMethod}
+                                checked={field.value === paymentMethod}
+                              />
+                            </FormControl>
+                            <FormLabel className="font-normal">
+                              {paymentMethod}
+                            </FormLabel>
+                          </FormItem>
+                        ))}
+                      </RadioGroup>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
 
             <div className="flex gap-2">
               <Button type="submit" disabled={isPending}>
@@ -60,7 +114,7 @@ const PaymentMethodForm = ({
                   <Loader className="w-4 h-4 animate-spin" />
                 ) : (
                   <ArrowRight className="w-4 h-4" />
-                )}{" "}
+                )}
                 Continue
               </Button>
             </div>
