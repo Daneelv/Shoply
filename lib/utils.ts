@@ -1,6 +1,6 @@
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
-import { nan } from "zod";
+// Removed unused import of 'nan' from "zod"
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -67,11 +67,16 @@ export function formatCurrency(amount: number | string | null): string {
     return CURRENCY_FORMATTER.format(amount);
   } else if (typeof amount === "string") {
     return CURRENCY_FORMATTER.format(Number(amount));
-  } else return nan;
+  } else return NaN;
 }
 
 // shortern the UUID
 export function formatID(id: string) {
+  return `..${id.substring(id.length - 6)}`;
+}
+
+// Shorten UUID
+export function formatId(id: string) {
   return `..${id.substring(id.length - 6)}`;
 }
 
@@ -114,3 +119,28 @@ export const formatDateTime = (dateString: Date) => {
     timeOnly: formattedTime,
   };
 };
+
+// Form the pagination links
+export function formUrlQuery({
+  params,
+  key,
+  value,
+}: {
+  params: string;
+  key: string;
+  value: string | null;
+}) {
+  const query = qs.parse(params);
+
+  query[key] = value;
+
+  return qs.stringifyUrl(
+    {
+      url: window.location.pathname,
+      query,
+    },
+    {
+      skipNull: true,
+    }
+  );
+}
