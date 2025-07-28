@@ -27,7 +27,6 @@ export const compare = async (
   const hashedPassword = await hash(plainPassword);
   return hashedPassword === encryptedPassword;
 };
-
 // // Use Web Crypto API compatible with Edge Functions
 
 // const encoder = new TextEncoder();

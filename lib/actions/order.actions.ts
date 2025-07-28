@@ -1,31 +1,32 @@
 "use server";
 
-import { isRedirectError } from "next/dist/client/components/redirect-error";
-import { convertToPlainObj, formatError } from "../utils";
-import { insertOrderSchema } from "../validators";
-import { prisma } from "@/db/prisma";
-import { CartItem, PaymentResult } from "@/types";
+import { isRedirectError } from "next/dist/client/components/redirect";
+import { convertToPlainObject, formatError } from "../utils";
 import { auth } from "@/auth";
 import { getMyCart } from "./cart.actions";
 import { getUserById } from "./user.actions";
+import { insertOrderSchema } from "../validators";
+import { prisma } from "@/db/prisma";
+import { CartItem, PaymentResult } from "@/types";
 import { paypal } from "../paypal";
 import { revalidatePath } from "next/cache";
 import { PAGE_SIZE } from "../constants";
+import { Prisma } from "@prisma/client";
+import { sendPurchaseReceipt } from "@/email";
 
 // Create order and create the order items
-
 export async function createOrder() {
   try {
     const session = await auth();
-    if (!session) throw new Error("User not authenticated");
+    if (!session) throw new Error("User is not authenticated");
 
     const cart = await getMyCart();
     const userId = session?.user?.id;
-    if (!userId) throw new Error("user not found");
+    if (!userId) throw new Error("User not found");
 
     const user = await getUserById(userId);
 
-    if (!cart || cart.items === 0) {
+    if (!cart || cart.items.length === 0) {
       return {
         success: false,
         message: "Your cart is empty",
@@ -36,7 +37,7 @@ export async function createOrder() {
     if (!user.address) {
       return {
         success: false,
-        message: "No Shipping Address found",
+        message: "No shipping address",
         redirectTo: "/shipping-address",
       };
     }
@@ -44,14 +45,14 @@ export async function createOrder() {
     if (!user.paymentMethod) {
       return {
         success: false,
-        message: "No Payment Method found",
+        message: "No payment method",
         redirectTo: "/payment-method",
       };
     }
 
-    // create order object
+    // Create order object
     const order = insertOrderSchema.parse({
-      userId: userId,
+      userId: user.id,
       shippingAddress: user.address,
       paymentMethod: user.paymentMethod,
       itemsPrice: cart.itemsPrice,
@@ -60,12 +61,11 @@ export async function createOrder() {
       totalPrice: cart.totalPrice,
     });
 
-    // Create a transaction to insert the order and order items
+    // Create a transaction to create order and order items in database
     const insertedOrderId = await prisma.$transaction(async (tx) => {
-      // Create the order
+      // Create order
       const insertedOrder = await tx.order.create({ data: order });
-
-      // Create the order items from the cart items
+      // Create order items from the cart items
       for (const item of cart.items as CartItem[]) {
         await tx.orderItem.create({
           data: {
@@ -75,8 +75,7 @@ export async function createOrder() {
           },
         });
       }
-
-      // Clear the user's cart after creating the order
+      // Clear cart
       await tx.cart.update({
         where: { id: cart.id },
         data: {
@@ -91,11 +90,11 @@ export async function createOrder() {
       return insertedOrder.id;
     });
 
-    if (!insertedOrderId) throw new Error("Order creation failed");
+    if (!insertedOrderId) throw new Error("Order not created");
 
     return {
       success: true,
-      message: "Order created successfully",
+      message: "Order created",
       redirectTo: `/order/${insertedOrderId}`,
     };
   } catch (error) {
@@ -104,17 +103,19 @@ export async function createOrder() {
   }
 }
 
-// Get Order by ID
+// Get order by id
 export async function getOrderById(orderId: string) {
-  const order = await prisma.order.findUnique({
-    where: { id: orderId },
+  const data = await prisma.order.findFirst({
+    where: {
+      id: orderId,
+    },
     include: {
-      orderitems: true, // Include order items
-      user: { select: { name: true, email: true } }, // Include user details
+      orderitems: true,
+      user: { select: { name: true, email: true } },
     },
   });
 
-  return convertToPlainObj(order);
+  return convertToPlainObject(data);
 }
 
 // Create new paypal order
@@ -268,7 +269,7 @@ export async function updateOrderToPaid({
   });
 }
 
-// Get users orders
+// Get user's orders
 export async function getMyOrders({
   limit = PAGE_SIZE,
   page,
@@ -290,5 +291,154 @@ export async function getMyOrders({
     where: { userId: session?.user?.id },
   });
 
-  return { data, totalPages: Math.ceil(dataCount / limit) };
+  return {
+    data,
+    totalPages: Math.ceil(dataCount / limit),
+  };
+}
+
+type SalesDataType = {
+  month: string;
+  totalSales: number;
+}[];
+
+// Get sales data and order summary
+export async function getOrderSummary() {
+  // Get counts for each resource
+  const ordersCount = await prisma.order.count();
+  const productsCount = await prisma.product.count();
+  const usersCount = await prisma.user.count();
+
+  // Calculate the total sales
+  const totalSales = await prisma.order.aggregate({
+    _sum: { totalPrice: true },
+  });
+
+  // Get monthly sales
+  const salesDataRaw = await prisma.$queryRaw<
+    Array<{ month: string; totalSales: Prisma.Decimal }>
+  >`SELECT to_char("createdAt", 'MM/YY') as "month", sum("totalPrice") as "totalSales" FROM "Order" GROUP BY to_char("createdAt", 'MM/YY')`;
+
+  const salesData: SalesDataType = salesDataRaw.map((entry) => ({
+    month: entry.month,
+    totalSales: Number(entry.totalSales),
+  }));
+
+  // Get latest sales
+  const latestSales = await prisma.order.findMany({
+    orderBy: { createdAt: "desc" },
+    include: {
+      user: { select: { name: true } },
+    },
+    take: 6,
+  });
+
+  return {
+    ordersCount,
+    productsCount,
+    usersCount,
+    totalSales,
+    latestSales,
+    salesData,
+  };
+}
+
+// Get all orders
+export async function getAllOrders({
+  limit = PAGE_SIZE,
+  page,
+  query,
+}: {
+  limit?: number;
+  page: number;
+  query: string;
+}) {
+  const queryFilter: Prisma.OrderWhereInput =
+    query && query !== "all"
+      ? {
+          user: {
+            name: {
+              contains: query,
+              mode: "insensitive",
+            } as Prisma.StringFilter,
+          },
+        }
+      : {};
+
+  const data = await prisma.order.findMany({
+    where: {
+      ...queryFilter,
+    },
+    orderBy: { createdAt: "desc" },
+    take: limit,
+    skip: (page - 1) * limit,
+    include: { user: { select: { name: true } } },
+  });
+
+  const dataCount = await prisma.order.count();
+
+  return {
+    data,
+    totalPages: Math.ceil(dataCount / limit),
+  };
+}
+
+// Delete an order
+export async function deleteOrder(id: string) {
+  try {
+    await prisma.order.delete({ where: { id } });
+
+    revalidatePath("/admin/orders");
+
+    return {
+      success: true,
+      message: "Order deleted successfully",
+    };
+  } catch (error) {
+    return { success: false, message: formatError(error) };
+  }
+}
+
+// Update COD order to paid
+export async function updateOrderToPaidCOD(orderId: string) {
+  try {
+    await updateOrderToPaid({ orderId });
+
+    revalidatePath(`/order/${orderId}`);
+
+    return { success: true, message: "Order marked as paid" };
+  } catch (error) {
+    return { success: false, message: formatError(error) };
+  }
+}
+
+// Update COD order to delivered
+export async function deliverOrder(orderId: string) {
+  try {
+    const order = await prisma.order.findFirst({
+      where: {
+        id: orderId,
+      },
+    });
+
+    if (!order) throw new Error("Order not found");
+    if (!order.isPaid) throw new Error("Order is not paid");
+
+    await prisma.order.update({
+      where: { id: orderId },
+      data: {
+        isDelivered: true,
+        deliveredAt: new Date(),
+      },
+    });
+
+    revalidatePath(`/order/${orderId}`);
+
+    return {
+      success: true,
+      message: "Order has been marked delivered",
+    };
+  } catch (error) {
+    return { success: false, message: formatError(error) };
+  }
 }
