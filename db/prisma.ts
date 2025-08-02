@@ -1,15 +1,16 @@
 import { PrismaClient } from "@prisma/client";
+import { Decimal } from "@prisma/client/runtime/library";
 
 export const prisma = new PrismaClient().$extends({
   result: {
     product: {
       price: {
-        compute(product) {
+        compute(product: { price: Decimal }) {
           return product.price.toString();
         },
       },
       rating: {
-        compute(product) {
+        compute(product: { rating: Decimal }) {
           return product.rating.toString();
         },
       },
@@ -18,25 +19,25 @@ export const prisma = new PrismaClient().$extends({
     cart: {
       itemsPrice: {
         needs: { itemsPrice: true },
-        compute(cart) {
+        compute(cart: { itemsPrice: Decimal }) {
           return cart.itemsPrice.toString();
         },
         shippingPrice: {
           needs: { shippingPrice: true },
-          compute(cart) {
+          compute(cart: { shippingPrice: Decimal }) {
             return cart.shippingPrice.toString();
           },
         },
         taxprice: {
           needs: { taxPrice: true },
-          compute(cart) {
+          compute(cart: { taxPrice: Decimal }) {
             return cart.taxPrice.toString();
           },
         },
         totalPrice: {
           needs: { totalPrice: true },
-          compute(cart) {
-            return cart.totalPrice.toString();
+          compute(cart: { totalPrice: Decimal }) {
+            return cart.totalPrice;
           },
         },
       },
@@ -45,32 +46,32 @@ export const prisma = new PrismaClient().$extends({
     order: {
       itemsPrice: {
         needs: { itemsPrice: true },
-        compute(cart) {
+        compute(cart: { itemsPrice: Decimal }) {
           return cart.itemsPrice.toString();
         },
         shippingPrice: {
           needs: { shippingPrice: true },
-          compute(cart) {
+          compute(cart: { shippingPrice: Decimal }) {
             return cart.shippingPrice.toString();
           },
         },
         taxprice: {
           needs: { taxPrice: true },
-          compute(cart) {
+          compute(cart: { taxPrice: Decimal }) {
             return cart.taxPrice.toString();
           },
         },
         totalPrice: {
           needs: { totalPrice: true },
-          compute(cart) {
-            return cart.totalPrice.toString();
+          compute(cart: { totalPrice: Decimal }) {
+            return cart.totalPrice;
           },
         },
       },
     },
     orderItem: {
       price: {
-        compute(cart) {
+        compute(cart: { price: Decimal }) {
           return cart.price.toString();
         },
       },

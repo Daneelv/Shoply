@@ -1,6 +1,7 @@
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 import qs from "qs";
+import { Product } from "@/types";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -133,16 +134,32 @@ export function formUrlQuery({
   value: string | null;
 }) {
   const query = qs.parse(params);
+  query[key] = value ?? undefined;
 
-  query[key] = value;
+  return `${window.location.pathname}?${qs.stringify(query, { skipNulls: true })}`;
+}
 
-  return qs.stringifyUrl(
-    {
-      url: window.location.pathname,
-      query,
-    },
-    {
-      skipNull: true,
+export function formatProductArray<T>(input: T): Product[] {
+  let products: Product[] = [];
+
+  if (typeof input === "string") {
+    try {
+      products = JSON.parse(input) as Product[];
+    } catch (error) {
+      console.error("Invalid JSON string:", error);
+      return [];
     }
-  );
+  } else if (Array.isArray(input)) {
+    products = input as Product[];
+  } else {
+    return [];
+  }
+
+  if (products.length === 0) return [];
+
+  return products.map((product: Product) => ({
+    ...product,
+    price: product.price?.toString?.() ?? "",
+    rating: product.rating?.toString?.() ?? "",
+  }));
 }

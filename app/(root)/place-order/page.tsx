@@ -50,7 +50,7 @@ const PlaceOrderPage = async () => {
               <h2 className="text-xl pb-4 ">Shipping Address</h2>
               <p>{userAddress.fullName}</p>
               <p>
-                {userAddress.address}, {userAddress.city}{" "}
+                {userAddress.streetAddress}, {userAddress.city}{" "}
                 {userAddress.postalCode}, {userAddress.country}{" "}
               </p>
               <div className="mt-3">

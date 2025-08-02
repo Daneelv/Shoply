@@ -1,6 +1,4 @@
 "use client";
-
-import { ShippingAddress } from "@/types";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
 import { useTransition } from "react";
@@ -54,7 +52,7 @@ const ShippingAddressForm = ({ address }: { address: ShippingAddress }) => {
         router.push("/payment-method");
       } catch (error) {
         toast({
-          description: error,
+          description: error instanceof Error ? error.message : String(error),
           variant: "destructive",
         });
       }
@@ -100,13 +98,13 @@ const ShippingAddressForm = ({ address }: { address: ShippingAddress }) => {
             <div className="flex md:flex-row flex-col gap-5">
               <FormField
                 control={form.control}
-                name="address"
+                name="streetAddress"
                 render={({
                   field,
                 }: {
                   field: ControllerRenderProps<
                     z.infer<typeof shippingAddressSchema>,
-                    "address"
+                    "streetAddress"
                   >;
                 }) => (
                   <FormItem className="w-full">

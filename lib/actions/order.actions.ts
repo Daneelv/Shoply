@@ -1,13 +1,13 @@
 "use server";
 
-import { isRedirectError } from "next/dist/client/components/redirect";
+import { isRedirectError } from "next/dist/client/components/redirect-error";
 import { convertToPlainObject, formatError } from "../utils";
 import { auth } from "@/auth";
 import { getMyCart } from "./cart.actions";
 import { getUserById } from "./user.actions";
 import { insertOrderSchema } from "../validators";
 import { prisma } from "@/db/prisma";
-import { CartItem, PaymentResult } from "@/types";
+import { CartItem, PaymentResult, ShippingAddress } from "@/types";
 import { paypal } from "../paypal";
 import { revalidatePath } from "next/cache";
 import { PAGE_SIZE } from "../constants";
@@ -263,6 +263,9 @@ export async function updateOrderToPaid({
   sendPurchaseReceipt({
     order: {
       ...updatedOrder,
+      totalPrice: updatedOrder.totalPrice.toFixed(2),
+      shippingPrice: updatedOrder.shippingPrice.toFixed(2),
+      taxPrice: updatedOrder.taxPrice.toFixed(2),
       shippingAddress: updatedOrder.shippingAddress as ShippingAddress,
       paymentResult: updatedOrder.paymentResult as PaymentResult,
     },

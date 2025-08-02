@@ -2,6 +2,19 @@ import { z } from "zod";
 import { formatNumberWithDecimal } from "./utils";
 import { PAYMENT_METHODS } from "./constants";
 
+// Decimal type for currency
+// export const currency = z
+//   .any()
+//   .transform((val) => {
+//     if (val instanceof Decimal) return val.toFixed(2); // Prisma Decimal
+//     if (typeof val === "number") return val.toFixed(2);
+//     if (typeof val === "string") return formatNumberWithDecimal(Number(value));
+//     throw new Error("Invalid currency value");
+//   })
+//   .refine((val) => /^\d+(\.\d{2})$/.test(val), {
+//     message: "Price must have exactly two decimal places",
+//   });
+
 const currency = z
   .string()
   .refine(
@@ -66,7 +79,7 @@ export const insertCartSchema = z.object({
   shippingPrice: currency,
   taxPrice: currency,
   sessionCartId: z.string().min(1, "Session cart id is required"),
-  userId: z.string().optional().nullable(),
+  // userId: z.string().optional().nullable(),
 });
 
 // Schema for the shipping address
