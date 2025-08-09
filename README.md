@@ -1,36 +1,93 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 🚀 Shoply
 
-## Getting Started
+> Ecommerce website built with next.js and postgres.
 
-First, run the development server:
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![Status](https://img.shields.io/badge/status-online-active.svg)]()
+
+---
+
+## 📸 Demo / Screenshots
+
+<p align="center">
+  <img src="docs/shoply.png" alt="shoply png" width="700">
+  <img src="docs/shoply1.png" alt="shoply1 png" width="700">
+  <img src="docs/shoply2.png" alt="shoply2 png" width="700">
+</p>
+
+---
+
+## 📜 About
+
+Full Ecommerce site with payment integration
+
+---
+
+## ✨ Features
+
+- ✅ Log in log out user
+- ✅ Add to cart
+- ✅ Order history
+- ✅ Admin Dashboard
+- ✅ Payment Integration (Stripe and Paypal)
+- ✅ Email Invoice PDF
+
+---
+
+## 🛠 Tech Stack
+
+**Frontend:** Next.js, TailwindCSS, ShadCN, typescript
+**Backend:** Next.js, prisma, neon, jest, typescript, uploadthing, react-email, Zod
+**Database:** Postgres
+
+---
+
+## ⚙️ Installation
+
+### You will have to register with some third party software companies
+
+- **_Emails:_** Resend
+- **_Payments:_** Paypal, Stripe
+- **_Database:_** Neon (you do not have to but its what i used)
+- **_Images:_** Uploadthing
 
 ```bash
+# Create a .env file
+NEXT_PUBLIC_APP_NAME = 'Shoply'
+NEXT_PUBLIC_APP_DESCRIPTION = "Modern e-commerce for developers"
+NEXT_PUBLIC_SERVER_URL  = 'http://localhost:3000'
+
+NEXTAUTH_SECRET = ''
+NEXTAUTH_URL_INTERNAL='http://localhost:3000'
+NEXTAUTH_URL='http://localhost:3000'
+
+DATABASE_URL=""
+ENCRYPTION_KEY = ''
+
+PAYMENT_METHODS= "PayPal, Stripe, CashOnDelivery"
+DEFAULT_PAYMENT_METHOD= "PayPal"
+
+PAYPAL_API_URL = 'https://api-m.sandbox.paypal.com'
+PAYPAL_CLIENT_ID = ''
+PAYPAL_APP_SECRET = ''
+
+UPLOADTHING_TOKEN=''
+UPLOADTHING_SECRET=''
+UPLOADTHING_APPID=''
+
+RESEND_API_KEY=''
+SENDER_EMAIL= ''
+
+STRIPE_SECRET_KEY = ''
+NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY = ''
+STRIPE_WEBHOOK_SECRET = ''
+
+# Clone the repo
+git clone https://github.com/Daneelv/ticket-logger.git
+
+# Install dependencies
+npm install
+
+# Run locally
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
-
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
-
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
-
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.

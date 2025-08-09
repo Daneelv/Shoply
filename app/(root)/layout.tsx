@@ -4,7 +4,7 @@ import Header from "@/components/shared/header";
 import Footer from "@/components/footer";
 
 export const metadata: Metadata = {
-  title: "Prostore",
+  title: "Shoply",
   description: "Modern e-commerce for developers",
 };
 
