@@ -37,7 +37,9 @@ Full Ecommerce site with payment integration
 ## 🛠 Tech Stack
 
 **Frontend:** Next.js, TailwindCSS, ShadCN, typescript
+
 **Backend:** Next.js, prisma, neon, jest, typescript, uploadthing, react-email, Zod
+
 **Database:** Postgres
 
 ---
